@@ -1,0 +1,83 @@
+.
+├── ./00_Index
+├── ./10_Academic
+│   └── ./10_Academic/11_Math
+├── ./20_Research
+│   ├── ./20_Research/21_Paper_Reviews
+│   │   ├── ./20_Research/21_Paper_Reviews/01_GS_SLAM
+│   │   │   ├── ./20_Research/21_Paper_Reviews/01_GS_SLAM/GS_SLAM.md
+│   │   │   └── ./20_Research/21_Paper_Reviews/01_GS_SLAM/PDF
+│   │   │       └── ./20_Research/21_Paper_Reviews/01_GS_SLAM/PDF/GS_SLAM_PDF.pdf
+│   │   ├── ./20_Research/21_Paper_Reviews/02_MASt3R-SLAM
+│   │   │   ├── ./20_Research/21_Paper_Reviews/02_MASt3R-SLAM/MASt3R-SLAM.md
+│   │   │   ├── ./20_Research/21_Paper_Reviews/02_MASt3R-SLAM/PDF
+│   │   │   │   └── ./20_Research/21_Paper_Reviews/02_MASt3R-SLAM/PDF/MASt3R-SLAM_pdf.pdf
+│   │   │   ├── ./20_Research/21_Paper_Reviews/02_MASt3R-SLAM/input
+│   │   │   └── ./20_Research/21_Paper_Reviews/02_MASt3R-SLAM/output
+│   │   │       ├── ./20_Research/21_Paper_Reviews/02_MASt3R-SLAM/output/input_clean (1).ply
+│   │   │       ├── ./20_Research/21_Paper_Reviews/02_MASt3R-SLAM/output/input_clean (2).ply
+│   │   │       ├── ./20_Research/21_Paper_Reviews/02_MASt3R-SLAM/output/input_clean.ply
+│   │   │       ├── ./20_Research/21_Paper_Reviews/02_MASt3R-SLAM/output/rgbd_dataset_freiburg1_360.ply
+│   │   │       └── ./20_Research/21_Paper_Reviews/02_MASt3R-SLAM/output/rgbd_dataset_freiburg1_desk2.ply
+│   │   ├── ./20_Research/21_Paper_Reviews/03_3R-GS
+│   │   │   ├── ./20_Research/21_Paper_Reviews/03_3R-GS/3R-GS.md
+│   │   │   └── ./20_Research/21_Paper_Reviews/03_3R-GS/PDF
+│   │   │       └── ./20_Research/21_Paper_Reviews/03_3R-GS/PDF/3R-GS.pdf
+│   │   └── ./20_Research/21_Paper_Reviews/04_MASt3R-GS
+│   │       ├── ./20_Research/21_Paper_Reviews/04_MASt3R-GS/MASt3R-GS.md
+│   │       └── ./20_Research/21_Paper_Reviews/04_MASt3R-GS/PDF
+│   │           └── ./20_Research/21_Paper_Reviews/04_MASt3R-GS/PDF/12_MASt3R_GS_Bridging_3D_Recon.pdf
+│   ├── ./20_Research/22_Meetings
+│   └── ./20_Research/23_Idea_proposal
+│       ├── ./20_Research/23_Idea_proposal/GS_SLAM and MASt3R_SLAM.md
+│       └── ./20_Research/23_Idea_proposal/Rigid SLAM의 내시경 환경 적응성.md
+├── ./30_Projects
+├── ./40_Dev
+├── ./50_Concepts
+│   ├── ./50_Concepts/3D Gaussian representation.md
+│   ├── ./50_Concepts/3D Reconstruction.md
+│   ├── ./50_Concepts/3D Vision.md
+│   ├── ./50_Concepts/Analytical Jacobians.md
+│   ├── ./50_Concepts/AutoDiff.md
+│   ├── ./50_Concepts/Bilinear Interpolation.md
+│   ├── ./50_Concepts/CUDA.md
+│   ├── ./50_Concepts/Computer vision.md
+│   ├── ./50_Concepts/DUSt3R 패밀리.md
+│   ├── ./50_Concepts/DUSt3R.md
+│   ├── ./50_Concepts/Dense SLAM.md
+│   ├── ./50_Concepts/Epipolar Geometry.md
+│   ├── ./50_Concepts/GPU Kernel.md
+│   ├── ./50_Concepts/Huber Norm.md
+│   ├── ./50_Concepts/Interpolation.md
+│   ├── ./50_Concepts/Jacobian.md
+│   ├── ./50_Concepts/Levenberg Marquardt.md
+│   ├── ./50_Concepts/MASt3R.md
+│   ├── ./50_Concepts/Monocular SLAM.md
+│   ├── ./50_Concepts/Numerical Jacobian.md
+│   ├── ./50_Concepts/SLAM.md
+│   └── ./50_Concepts/projective function.md
+├── ./90_Resources
+│   ├── ./90_Resources/91_Templates
+│   │   ├── ./90_Resources/91_Templates/Concept_Tamplate.md
+│   │   └── ./90_Resources/91_Templates/Paper_Template.md
+│   └── ./90_Resources/92_Images
+│       ├── ./90_Resources/92_Images/GS_SLAM_20260221_1101.png
+│       ├── ./90_Resources/92_Images/GS_SLAM_20260223_1629.png
+│       ├── ./90_Resources/92_Images/Interpolation_2D_lanczos.png
+│       ├── ./90_Resources/92_Images/MASt3R-SLAM_20260204_2240_3.2Matching_coding_explaination.png
+│       ├── ./90_Resources/92_Images/MASt3R-SLAM_20260217_0719.png
+│       ├── ./90_Resources/92_Images/MASt3R-SLAM_20260217_0720.png
+│       ├── ./90_Resources/92_Images/MASt3R-SLAM_3.2Matching_Additional_explanation.png
+│       ├── ./90_Resources/92_Images/MASt3R-SLAM_geometric_interpretation.png
+│       ├── ./90_Resources/92_Images/Pasted image 20260128012514.png
+│       ├── ./90_Resources/92_Images/Pasted image 20260128014953.png
+│       ├── ./90_Resources/92_Images/Pasted image 20260128015032.png
+│       ├── ./90_Resources/92_Images/Pasted image 20260128020654.png
+│       ├── ./90_Resources/92_Images/Pasted image 20260128153614.png
+│       ├── ./90_Resources/92_Images/Rigid SLAM의 내시경 환경 적응성_20260217_0702.png
+│       ├── ./90_Resources/92_Images/Rigid SLAM의 내시경 환경 적응성_20260217_0706.png
+│       └── ./90_Resources/92_Images/Rigid SLAM의 내시경 환경 적응성_20260217_0706_1.png
+├── ./VIT.md
+└── ./folder_structure.txt
+
+24 directories, 57 files
