@@ -424,11 +424,9 @@ float b0 = - (err[0]*gx[0] + err[1]*gx[1] + err[2]*gx[2]);
 float b1 = - (err[0]*gy[0] + err[1]*gy[1] + err[2]*gy[2]);
 ```
 
-$$\mathbf{J}^\mathbf{T} \mathbf{e}=
-\begin{bmatrix} 
-b_{0} \\
-b_{1} 
-\end{bmatrix}$$
+
+$$\mathbf{J}^\mathbf{T} \mathbf{e}=\begin{bmatrix} b_{0} \\ b_{1} \end{bmatrix}$$
+
 ###### 3.2.5.5.3 $(J^T J + \lambda I)$
 @`/mast3r_slam/backend/src/matching_kernels.cu` 
 @`iter_proj_kernel(... , const float lambda_init, ...)`
