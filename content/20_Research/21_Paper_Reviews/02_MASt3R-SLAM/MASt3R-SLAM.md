@@ -243,7 +243,9 @@ $$\mathbf{J} = \begin{bmatrix} \frac{\partial \mathbf{r}}{\partial u} & \frac{\p
 
 
 $$\mathbf{r}(\mathbf{p}) =\underbrace{\psi([\mathbf{X}_i^i]_{\mathbf{p}})}_{\text{현재 픽셀 } \mathbf{p} \text{에서의 Ray 값}} - \underbrace{\psi(\mathbf{x})}_{\text{타겟 Ray 값 (상수)}}$$
+
 $$let \space \mathbf{I}(\mathbf{p}) = \psi([\mathbf{X}_i^i]_{\mathbf{p}})$$
+
 - $\mathbf{I}$는 좌표 $\mathbf{p}$를 넣으면 해당 위치의 Ray 벡터를 뱉어내는 **이미지 함수**!! 색상 값이 아님
 - $\mathbf{T} = \psi(\mathbf{x})$는 우리가 찾고자 하는 정답 값이므로 상수(Constant)
 
