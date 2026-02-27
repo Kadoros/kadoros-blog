@@ -237,6 +237,7 @@ $$(J^T J + \lambda I) \delta = J^T e$$
 논문에서는 [[../../../50_Concepts/Analytical Jacobians|Analytical Jacobians]]를 사용한다고 언급되어 있으나, 이는 수식적으로 Pointmap의 공간적 변화율(Spatial Gradient)을 의미한다. @8.2. Rays and Distance 에서 확인 할 수 있다.(사실 뭔말인지 모르겠다) 
 
 최적화 대상은 픽셀 좌표 $\mathbf{p}=(u, v)$이며, 이를 $\mathbf{p}$에 대해 편미분한 [[../../../50_Concepts/Jacobian|Jacobian]] $\mathbf{J}$는, Pointmap 이미지의 공간적 변화율(Spatial Gradient, **Geometric Ray Gradient**) 자체가 Jacobian J 가 된다 
+
 $$\mathbf{J} = \begin{bmatrix} \frac{\partial \mathbf{r}}{\partial u} & \frac{\partial \mathbf{r}}{\partial v} \end{bmatrix}$$
 ##### 3.2.5.2. why $J = \nabla \mathbf{I}$ (Spatial Gradient, **Geometric Ray Gradient**)??
 
@@ -245,9 +246,11 @@ $$\mathbf{r}(\mathbf{p}) =\underbrace{\psi([\mathbf{X}_i^i]_{\mathbf{p}})}_{\tex
 $$let \space \mathbf{I}(\mathbf{p}) = \psi([\mathbf{X}_i^i]_{\mathbf{p}})$$
 - $\mathbf{I}$는 좌표 $\mathbf{p}$를 넣으면 해당 위치의 Ray 벡터를 뱉어내는 **이미지 함수**!! 색상 값이 아님
 - $\mathbf{T} = \psi(\mathbf{x})$는 우리가 찾고자 하는 정답 값이므로 상수(Constant)
+
 $$\mathbf{J} = \frac{\partial \mathbf{r}}{\partial \mathbf{p}} = \frac{\partial}{\partial \mathbf{p}} \left( \mathbf{I}(\mathbf{p}) - \mathbf{T} \right)$$
 $$\mathbf{J} = \frac{\partial \mathbf{I}(\mathbf{p})}{\partial \mathbf{p}} - \underbrace{\frac{\partial \mathbf{T}}{\partial \mathbf{p}}}_{0 (\text{상수 미분})}$$
 $$\mathbf{J} = \begin{bmatrix} \frac{\partial \mathbf{I}}{\partial u} & \frac{\partial \mathbf{I}}{\partial v} \end{bmatrix}= \nabla \mathbf{I}$$
+
 **이 수식이 의미하는 바는 무엇일까요?**
 - $\frac{\partial \mathbf{I}}{\partial u}$: 픽셀 $u$(가로)가 변할 때, 이미지의 값(Ray)이 얼마나 변하는가?
 - $\frac{\partial \mathbf{I}}{\partial v}$: 픽셀 $v$(세로)가 변할 때, 이미지의 값(Ray)이 얼마나 변하는가?
