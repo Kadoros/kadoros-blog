@@ -449,9 +449,14 @@ A11 += lambda;
 $$\delta = \Delta \mathbf{p}= \begin{bmatrix} \Delta {u}  \\ \Delta {v} \end{bmatrix}$$
 
 $$(J^T J + \lambda I) \delta = J^T e$$
+
 $$\begin{bmatrix} A_{00} & A_{01}\\A_{10} & A_{11} \end{bmatrix} \begin{bmatrix} \Delta {u} \\ \Delta {v} \end{bmatrix} = \begin{bmatrix} b_{0} \\ b_{1}  \end{bmatrix}$$
 
-$$\begin{bmatrix} \Delta u \\ \Delta v \end{bmatrix} = \frac{1}{\det} \begin{bmatrix} A_{11} & -A_{01} \\ -A_{01} & A_{00} \end{bmatrix} \begin{bmatrix} b_0 \\ b_1 \end{bmatrix}$$$$\frac{1}{\det(H)} = \frac{1}{A_{00}A_{11} - A_{01}^2}$$@`/mast3r_slam/backend/src/matching_kernels.cu` 
+
+$$\begin{bmatrix} \Delta u \\ \Delta v \end{bmatrix} = \frac{1}{\det}\begin{bmatrix} A_{11} & -A_{01} \\ -A_{01} & A_{00} \end{bmatrix}\begin{bmatrix} b_0 \\ b_1 \end{bmatrix}$$
+
+$$\frac{1}{\det(H)} = \frac{1}{A_{00}A_{11} - A_{01}^2}$$
+@`/mast3r_slam/backend/src/matching_kernels.cu` 
 @`iter_proj_kernel(... , const float lambda_init, ...)`
 ```cpp
 // Solve system
