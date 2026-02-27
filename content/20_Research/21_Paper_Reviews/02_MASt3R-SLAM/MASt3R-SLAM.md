@@ -406,20 +406,14 @@ float A11 = gy[0]*gy[0] + gy[1]*gy[1] + gy[2]*gy[2];
 note! A10 = A01 ($\mathbf{g}_y \cdot \mathbf{g}_x = \mathbf{g}_x \cdot \mathbf{g}_y$)
 
 
+
 $$\mathbf{J}^T \mathbf{J} = \begin{bmatrix} A_{00} & A_{01}\\ A_{10} & A_{11} \end{bmatrix}$$
+
 ###### 3.2.5.5.2 $J^T e$
 여기서 e 는 오차이다 즉 e = r(잔차 백터)인 것이다
 
 그리고 $-\mathbf{J}^\mathbf{T} \mathbf{r}$을 구해야 한다. 그래야 최적화가 된다 왜냐? cost function($\mathbf{r}$)의 아래로 가야 하기 때문
-$$\mathbf{J}^\mathbf{T} \mathbf{e}= \mathbf{J}^\mathbf{T} \mathbf{r}=
-\begin{bmatrix} \mathbf{g}_x^T \\ \mathbf{g}_y^T \end{bmatrix} 
-\begin{bmatrix} \mathbf{r} \end{bmatrix}
-=
-\begin{bmatrix} 
-\mathbf{g}_x \cdot \mathbf{r}  \\
-\mathbf{g}_y \cdot \mathbf{r} 
-\end{bmatrix}
-$$
+$$\mathbf{J}^\mathbf{T} \mathbf{e}= \mathbf{J}^\mathbf{T} \mathbf{r}=\begin{bmatrix} \mathbf{g}_x^T \\ \mathbf{g}_y^T \end{bmatrix}\begin{bmatrix} \mathbf{r} \end{bmatrix}=\begin{bmatrix} \mathbf{g}_x\cdot \mathbf{r}  \\ \mathbf{g}_y \cdot \mathbf{r} \end{bmatrix}$$
 @`/mast3r_slam/backend/src/matching_kernels.cu` 
 @`iter_proj_kernel()`
 ```cpp
