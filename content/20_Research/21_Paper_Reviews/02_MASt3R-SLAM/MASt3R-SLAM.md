@@ -241,7 +241,7 @@ $$\mathbf{J} = \begin{bmatrix} \frac{\partial \mathbf{r}}{\partial u} & \frac{\p
 ##### 3.2.5.2. why $J = \nabla \mathbf{I}$ (Spatial Gradient, **Geometric Ray Gradient**)??
 
 
-$$\mathbf{r}(\mathbf{p}) = \underbrace{\psi([\mathbf{X}_i^i]_{\mathbf{p}})}_{\text{현재 픽셀 } \mathbf{p} \text{에서의 Ray 값}} - \underbrace{\psi(\mathbf{x})}_{\text{타겟 Ray 값 (상수)}}$$
+$$\mathbf{r}(\mathbf{p}) =\underbrace{\psi([\mathbf{X}_i^i]_{\mathbf{p}})}_{\text{현재 픽셀 } \mathbf{p} \text{에서의 Ray 값}} - \underbrace{\psi(\mathbf{x})}_{\text{타겟 Ray 값 (상수)}}$$
 $$let \space \mathbf{I}(\mathbf{p}) = \psi([\mathbf{X}_i^i]_{\mathbf{p}})$$
 - $\mathbf{I}$는 좌표 $\mathbf{p}$를 넣으면 해당 위치의 Ray 벡터를 뱉어내는 **이미지 함수**!! 색상 값이 아님
 - $\mathbf{T} = \psi(\mathbf{x})$는 우리가 찾고자 하는 정답 값이므로 상수(Constant)
@@ -406,10 +406,7 @@ float A11 = gy[0]*gy[0] + gy[1]*gy[1] + gy[2]*gy[2];
 note! A10 = A01 ($\mathbf{g}_y \cdot \mathbf{g}_x = \mathbf{g}_x \cdot \mathbf{g}_y$)
 
 
-$$\mathbf{J}^T \mathbf{J} = \begin{bmatrix} 
-A_{00} & A_{01}\\
-A_{10} & A_{11}
-\end{bmatrix}$$
+$$\mathbf{J}^T \mathbf{J} = \begin{bmatrix} A_{00} & A_{01}\\ A_{10} & A_{11} \end{bmatrix}$$
 ###### 3.2.5.5.2 $J^T e$
 여기서 e 는 오차이다 즉 e = r(잔차 백터)인 것이다
 
