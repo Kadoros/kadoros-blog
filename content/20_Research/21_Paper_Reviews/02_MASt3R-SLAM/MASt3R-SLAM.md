@@ -445,10 +445,9 @@ A11 += lambda;
 - **$\lambda$가 작을 때:** 원래 Hessian에 가까워져 **Gauss-Newton**처럼 동작합니다
 
 ###### 3.2.5.5.4 $\delta$ 그리고 새로운 픽셀 좌표
-$$\delta = \Delta \mathbf{p}= \begin{bmatrix} 
-\Delta {u}  \\
-\Delta {v} 
-\end{bmatrix}$$
+
+$$\delta = \Delta \mathbf{p}= \begin{bmatrix} \Delta {u}  \\ \Delta {v} \end{bmatrix}$$
+
 $$(J^T J + \lambda I) \delta = J^T e$$
 $$\begin{bmatrix} A_{00} & A_{01}\\A_{10} & A_{11} \end{bmatrix} \begin{bmatrix} \Delta {u} \\ \Delta {v} \end{bmatrix} = \begin{bmatrix} b_{0} \\ b_{1}  \end{bmatrix}$$
 
