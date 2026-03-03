@@ -987,6 +987,7 @@ def update_pointmap(self, X: torch.Tensor, C: torch.Tensor
 ### 3.4. Graph Construction and Loop Closure
 여기서는 키프래임을 선택하는 기준을 이야기하고 또한 loop closure 을 한다 
 #### 3.4.1 keyframe selection
+ $\mathbf{m_{f,k}}$의 valid matches,  unique keyframe pixels 가 특정 기준치 $ω_k$ 보다 작으면 keyframe 이 추가 된다. 
 @`/mast3r_slam/tracker.py`
 ```python
 def track(self, frame: Frame):
@@ -1007,7 +1008,8 @@ def track(self, frame: Frame):
 - valid matching points들의 합계 는 이미 outlier and now confidence 등의 요소를 제외함 
 - $\frac{\text{유효 매칭 수}}{\text{전체 픽셀 수}}$
 - idx_f2k: 현재 프레임(F)의 픽셀이 키프레임(K)의 **어느 픽셀**에 매칭되는지 가리키는 인덱스
-- 
+- match_frac_k: valid matches
+- unique_frac_f: unique keyframe pixels
 @`/mast3r_slam/main.py`
 ```python
 if __name__ == "__main__":
@@ -1017,15 +1019,30 @@ if __name__ == "__main__":
 	if try_reloc:
 		states.set_mode(Mode.RELOC)
 	states.set_frame(frame)
-...
+	...
 	if add_new_kf:
 		keyframes.append(frame)
-		states.queue_global_optimization(len(keyframes) - 1)
-		# In single threaded mode, wait for the backend to finish
-		while config["single_thread"]:
-			with states.lock:
-				if len(states.global_optimizer_tasks) == 0:
-					break
-			time.sleep(0.01)
+		...
 	...  
 ```
+keyframes.append(frame) 로 추가한다. 
+#### 3.4.2 Edge connection 
+@`/mast3r_slam/main.py`
+```python
+def run_backend(cfg, model, states, keyframes, K):
+	...
+	# Graph Construction
+	kf_idx = []
+	# k to previous consecutive keyframes
+	n_consec = 1
+	for j in range(min(n_consec, idx)):
+		kf_idx.append(idx - 1 - j)
+```
+**kf_idx**: 이번 키프래임과 연결될 후보군이다. 자세히 말해서 현재 프레임($K_i$)과 Factor Graph에서 엣지(Edge)를 맺을 모든 대상들의 집합
+
+**(n_consec = 1)**: j = 0에서만 루프를 실행 하게 함, 그렇기에 idx - 1 - j 는 항상 idx - 1 이것이 된다. 이 뜻은 결국 후보군이 하나라는 소리이며 즉 직전 keyframe 과 연결하겠다는 의미이다.
+
+일반적인 SLAM에서는 하나의 직전 3~5개의 프레임과 촘촘하게 연결 함 하지면 여기서는 1개만 연결함 
+이는 [[MASt3R]]의 3D prior 를 믿는 다는 것이다. 
+
+#### 3.4.3 Loop Closure Verification Logic
