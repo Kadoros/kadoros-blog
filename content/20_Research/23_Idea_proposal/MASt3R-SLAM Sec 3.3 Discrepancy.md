@@ -7,6 +7,7 @@ parent_concept:
 
 
 [[MASt3R-SLAM]] 논문의 Tracking 파트(Sec 3.3)에서 정의한 에러 함수(Error Function)와 실제 공식 GitHub의 PyTorch 구현체 사이에 **수학적 모순**을 발견했습니다.
+![[../../90_Resources/92_Images/MASt3R-SLAM Sec 3.3 Discrepancy_20260303_1552.png]]
 
 ### 논문의 수식 (Paper Equation)
 논문에서는 방향(Ray) 에러 $E_r$을 다음과 같이 정의합니다.
