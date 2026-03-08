@@ -7,7 +7,9 @@ parent_concept:
 ---
 # 1. Introduction 
 $$E_r = \sum \left\|\frac{ \psi(\tilde{\mathbf{X}}_k) - \psi(\mathbf{T}_{kf} \mathbf{X}_f)} {w(q,\sigma^2)} \right\|_\rho^2 \space\space \space\space (1)$$
+
 $$E_r = \sum \left\|\frac{ \psi(\tilde{\mathbf{X}}_k) - \psi(\mathbf{T}_{kf} \mathbf{X}_f)} {\sqrt{w(q,\sigma^2)}} \right\|_\rho^2 \space\space \space\space (2)$$
+
 [[MASt3R-SLAM]]논문에서 3.3. Tracking and Pointmap Fusion 에서 나오는 수식 (1) 을 코드 맵핑하던중 깃허브에 공개된 코드에서는 의 수식(2)을 사용하는 것을 발견하였다. 이에 대한 내용은 [[MASt3R-SLAM Sec 3.3 Discrepancy]]를 참고하기 바람. 그리고 수식 전걔의 내용은 [[MASt3R-SLAM]]의 3.3.1 Tracking을 확인 하기 바람
 
 위의 내용을 코드를 논문의 수식으로 변경함으로써 실험을 통해서 변화를 확인 하기 위함이다. 
@@ -43,7 +45,9 @@ instead of ray error.
 
 ## 3.2 code modification 
 Gauss-Newton이나 Levenberg-Marquardt 최적화에서 우리가 최소화하려는 에러 E는 잔차(Residual) r의 제곱합이다.
+
 $$E = \frac{1}{2} \sum \mathbf{b}^T \mathbf{b}$$
+
 코드의 solve 함수를 보면 b는 다음과 같이 정의됩니다.
 @`/mast3r_slam/tracking.py` 
 ```python
@@ -57,12 +61,20 @@ def solve(self, sqrt_info, r, J):
 	...
 	cost = 0.5 * (b.T @ b).item()
 ```
+
 $$r_{white} = \text{sqrt\_info} \cdot r$$
+
 $$\text{robust\_sqrt\_info} = \text{sqrt\_info} \cdot \sqrt{w_{huber}(r_{white})}$$
+
 $$\mathbf{b} = \left( \text{sqrt\_info} \cdot \sqrt{w_{huber}(\text{sqrt\_info} \cdot r)} \right) \cdot r$$
+
 벡터 b는 **"기본 가중치 × Huber 가중치 ×잔차" 의 형태가 됩니다.
 에러를 수학적으로 전개하면 다음과 같습니다.
-$$E = \frac{1}{2} \sum \mathbf{b}^T \mathbf{b}$$$$E = \frac{1}{2} \sum \left( \text{sqrt\_info} \cdot \sqrt{w_{huber}(r_{white})} \cdot r \right)^2$$
+
+$$E = \frac{1}{2} \sum \mathbf{b}^T \mathbf{b}$$
+
+$$E = \frac{1}{2} \sum \left( \text{sqrt\_info} \cdot \sqrt{w_{huber}(r_{white})} \cdot r \right)^2$$
+
 $$E = \frac{1}{2} \sum \left( \mathbf{\text{sqrt\_info}^2} \cdot w_{huber}(r_{white}) \cdot r^2 \right)$$
 
 
@@ -94,6 +106,18 @@ def opt_pose_calib_sim3(self, Xf, Xk, T_WCf, T_WCk, Qk, valid, meas_k, valid_mea
 위 코드는 sqrt_info를 자기 자신을 제곱하는 꼴이 된다 
 $$E = \frac{1}{2} \sum \left( \mathbf{\text{(sqrt\_info}^2)^2} \cdot w_{huber}(r_{white}) \cdot r^2 \right)$$
 # 4. Experimental Results
+## 4.1 Result Overview 
+
+| 데이터셋          | 모드 (Calib) | Tracking 상태       | 최종 평가 (APE / Umeyama)                 | 비고                                |
+| :------------ | :--------- | :---------------- | :------------------------------------ | :-------------------------------- |
+| **7-Scenes**  | `no-calib` | 정상 (FPS ~2.8)     | **성공** (RMSE 0.03m ~ 0.11m)           | 논문의 Plug-and-play 기능 정상 작동 확인     |
+| **7-Scenes**  | `calib`    | 불안정 (FPS ~2.0)    | **실패** (`Degenerate covariance rank`) | 궤적(Trajectory)이 한 점으로 수렴하거나 붕괴됨   |
+| **TUM RGB-D** | `no-calib` | 잦은 Relocalization | **성공** (RMSE 0.02m ~ 0.11m)           | 빠른 움직임으로 인해 Tracking 실패 잦음, 복구는 됨 |
+| **TUM RGB-D** | `calib`    | 불안정 (FPS ~3.9)    | **실패** (`Degenerate covariance rank`) | 궤적 붕괴                             |
+| **ETH3D**     | `calib`    | 불안정 (FPS ~4.5)    | **실패** (`Degenerate covariance rank`) | 궤적 붕괴                             |
+- Uncalibrated 모드는 정상적으로 작동하며, 7-Scenes와 TUM 데이터셋에서 준수한 RMSE(수 cm ~ 10cm 내외)를 보여주었다.
+- Calibrated 모드에서 모든 데이터셋의 최종 평가가 실패했다
+
 # 5. Analysis & Discussion
 #  6. Conclusion & Future Work
 
@@ -111,14 +135,6 @@ $$E = \frac{1}{2} \sum \left( \mathbf{\text{(sqrt\_info}^2)^2} \cdot w_{huber}(r
 ---
 
 ### 1. 실험 결과 요약 (Overview)
-
-| 데이터셋 | 모드 (Calib) | Tracking 상태 | 최종 평가 (APE / Umeyama) | 비고 |
-| :--- | :--- | :--- | :--- | :--- |
-| **7-Scenes** | `no-calib` | 정상 (FPS ~2.8) | **성공** (RMSE 0.03m ~ 0.11m) | 논문의 Plug-and-play 기능 정상 작동 확인 |
-| **7-Scenes** | `calib` | 불안정 (FPS ~2.0) | **실패** (`Degenerate covariance rank`) | 궤적(Trajectory)이 한 점으로 수렴하거나 붕괴됨 |
-| **TUM RGB-D** | `no-calib` | 잦은 Relocalization | **성공** (RMSE 0.02m ~ 0.11m) | 빠른 움직임으로 인해 Tracking 실패 잦음, 복구는 됨 |
-| **TUM RGB-D** | `calib` | 불안정 (FPS ~3.9) | **실패** (`Degenerate covariance rank`) | 궤적 붕괴 |
-| **ETH3D** | `calib` | 불안정 (FPS ~4.5) | **실패** (`Degenerate covariance rank`) | 궤적 붕괴 |
 
 *   **성공적인 부분:** 카메라 내부 파라미터(K) 없이 구동하는 `--no-calib` 모드는 정상적으로 작동하며, 7-Scenes와 TUM 데이터셋에서 준수한 RMSE(수 cm ~ 10cm 내외)를 보여주었습니다.
 *   **문제점:** 카메라 파라미터를 사용하는 **Calibrated 모드에서 모든 데이터셋의 최종 평가가 실패**했습니다.
