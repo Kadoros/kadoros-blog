@@ -1045,4 +1045,24 @@ def run_backend(cfg, model, states, keyframes, K):
 일반적인 SLAM에서는 하나의 직전 3~5개의 프레임과 촘촘하게 연결 함 하지면 여기서는 1개만 연결함 
 이는 [[MASt3R]]의 3D prior 를 믿는 다는 것이다. 
 
-#### 3.4.3 Loop Closure Verification Logic
+#### 3.4.3 Loop Closure Candidate Retrieval (ASMK)
+$K_{i-1}$ 와 함께 후보군으로 들어갈 키 프래임을 찾는다. 
+@`/mast3r_slam/main.py`
+```python
+def run_backend(cfg, model, states, keyframes, K):
+	...
+	retrieval_inds = retrieval_database.update(
+	    frame,
+	    add_after_query=True,
+	    k=config["retrieval"]["k"], # Top-K
+	    min_thresh=config["retrieval"]["min_thresh"], # ω_r
+	)
+	kf_idx += retrieval_inds # 찾은 후보들을 후보군 리스트에 추가함
+```
+
+ASMK(Aggregated Selective Match Kernel) 를 활용하여 주어진 keyFrame 과 비슷한 keyFrame를 DB에서 찾는다. 
+$ω_r$보다 유사도가 높아야지 루프 후보로 선정 가능
+top-k개만 가져옴 
+찾은 후보들을 후보군 리스트에 추가함
+
+retrieval_database.update() 함수를 분석해보자 
