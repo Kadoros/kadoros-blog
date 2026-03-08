@@ -220,11 +220,12 @@ FPS: 2.794340382215157
 TUM RGB-D Uncalibrated 에서는 빈도가 많다  
 전반적으로 Cholesky failed 는 31번 RELOCALIZING against 는 97번 그리고 Failed to relocalize는 66번 발생했다. 
 
+#### Pointmap
 
-|     |     |
-| --- | --- |
-|     |     |
-
+| ![[../../../MASt3R-SLAM_Sec 3.3_Discrepancy_experiment_ply_normal.png]] | ![[../../../MASt3R-SLAM_Sec 3.3_Discrepancy_experiment_ply_modified.png]] |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| 기본                                                                      | code modifed version                                                      |
+보이는 봐와 같이 포인트 맵은 동일 하다 
 
 
 # 5. Analysis & Discussion
