@@ -86,8 +86,8 @@ def opt_pose_ray_dist_sim3(self, Xf, Xk, T_WCf, T_WCk, Qk, valid):
 	# sqrt_info_dist = 1 / self.cfg["sigma_dist"] * valid * torch.sqrt(Qk)
   
 	# make sqrt_info square to test paper formula
-	sqrt_info_ray = 1 / torch.pow(self.cfg["sigma_ray"]) * valid * Qk
-	sqrt_info_dist = 1 / torch.pow(self.cfg["sigma_dist"]) * valid * Qk
+	sqrt_info_ray = (1 / (self.cfg["sigma_ray"] ** 2)) * valid * Qk
+	sqrt_info_dist = (1 / (self.cfg["sigma_ray"] ** 2)) * valid * Qk
 	
 	sqrt_info = torch.cat((sqrt_info_ray.repeat(1, 3), sqrt_info_dist), dim=1)
 	
@@ -98,10 +98,10 @@ def opt_pose_calib_sim3(self, Xf, Xk, T_WCf, T_WCk, Qk, valid, meas_k, valid_mea
 	# sqrt_info_dist = 1 / self.cfg["sigma_dist"] * valid * torch.sqrt(Qk)
   
 	# make sqrt_info square to test paper formula
-	sqrt_info_ray = 1 / torch.pow(self.cfg["sigma_ray"]) * valid * Qk
-	sqrt_info_dist = 1 / torch.pow(self.cfg["sigma_dist"]) * valid * Qk
+	sqrt_info_pixel = 1 / torch.pow(self.cfg["sigma_ray"]) * valid * Qk
+	sqrt_info_depth = 1 / torch.pow(self.cfg["sigma_dist"]) * valid * Qk
 	
-	sqrt_info = torch.cat((sqrt_info_ray.repeat(1, 3), sqrt_info_dist), dim=1)
+
 ```
 위 코드는 sqrt_info를 자기 자신을 제곱하는 꼴이 된다 
 
@@ -150,19 +150,20 @@ fps: 3.~~
 
 #### Table 2: TUM RGB-D Uncalibrated 
 
-| Sequence        | 논문 결과 (Ours*) | 현재 실험 결과      | 비교 분석                 |
-| :-------------- | :------------ | :------------ | :-------------------- |
-| freiburg1_360   | 0.070         | **0.072**     | 오차 범위 내 유사            |
-| freiburg1_desk  | 0.035         | **0.039**     | 오차 범위 내 유사            |
-| freiburg1_desk2 | 0.055         | **0.053**     | ==소폭 개선==             |
-| freiburg1_floor | 0.056         | **0.055**     | ==소폭 개선==             |
-| freiburg1_plant | 0.035         | **0.036**     | 오차 범위 내 유사            |
-| freiburg1_room  | ==0.118==     | ==**0.054**== | ==압도적 개선 (절반 이하 에러)== |
-| freiburg1_rpy   | 0.041         | **0.045**     | 오차 범위 내 유사            |
-| freiburg1_teddy | 0.114         | **0.111**     | ==소폭 개선==             |
-| freiburg1_xyz   | 0.020         | **0.020**     | 완벽 일치                 |
-| **Average**     | **0.060**     | **0.054**     | ==논문 수치 보다 좋음==       |
-놀랍게도 **현재 실험 결과의 평균이 논문보다 더 우수**하게 측정됨
+| Sequence        | 논문 결과 (Ours*) | 현재 실험 결과  | 비교 분석                 |
+| :-------------- | :------------ | :-------- | :-------------------- |
+| freiburg1_360   | 0.070         | **0.072** | 오차 범위 내 유사            |
+| freiburg1_desk  | 0.035         | **0.039** | 오차 범위 내 유사            |
+| freiburg1_desk2 | 0.055         | **0.053** | ==소폭 개선==             |
+| freiburg1_floor | 0.056         | **0.055** | ==소폭 개선==             |
+| freiburg1_plant | 0.035         | **0.036** | 오차 범위 내 유사            |
+| freiburg1_room  | ==0.118==     | ==0.054== | ==압도적 개선 (절반 이하 에러)== |
+| freiburg1_rpy   | 0.041         | **0.045** | 오차 범위 내 유사            |
+| freiburg1_teddy | 0.114         | **0.111** | ==소폭 개선==             |
+| freiburg1_xyz   | 0.020         | **0.020** | 완벽 일치                 |
+| **Average**     | **0.060**     | **0.054** | ==논문 수치 보다 좋음==       |
+|                 |               |           |                       |
+실험 결과의 평균이 논문보다 더 우수하게 측정됨
 
 
 #### logs 
@@ -227,174 +228,48 @@ TUM RGB-D Uncalibrated 에서는 빈도가 많다
 | 기본                                                                      | code modifed version                                                      |
 보이는 봐와 같이 포인트 맵은 동일 하다 
 
-
-# 5. Analysis & Discussion
-#  6. Conclusion & Future Work
-
-
-
-
-
-
-제공해주신 MASt3R-SLAM 논문 분석 노트, 코드(`tracker.py`), 그리고 4개의 실험 로그(`7seane`, `eth3d`, `tum`의 calib/no-calib)를 종합적으로 분석한 결과입니다.
-
-현재 실험에서 **가장 치명적인 문제(Calibrated 모드에서의 궤적 붕괴)**가 발생하고 있으며, 그 원인은 작성자님이 `tracker.py`를 수정하면서 발생한 **수학적 가중치(Weight) 계산의 오류**로 강하게 추정됩니다.
-
-아래에 상세한 실험 결과 정리와 원인 분석, 그리고 해결 방안을 정리해 드립니다.
-
----
-
-### 1. 실험 결과 요약 (Overview)
-
-*   **성공적인 부분:** 카메라 내부 파라미터(K) 없이 구동하는 `--no-calib` 모드는 정상적으로 작동하며, 7-Scenes와 TUM 데이터셋에서 준수한 RMSE(수 cm ~ 10cm 내외)를 보여주었습니다.
-*   **문제점:** 카메라 파라미터를 사용하는 **Calibrated 모드에서 모든 데이터셋의 최종 평가가 실패**했습니다.
-
----
-
-### 2. 핵심 문제 분석: 왜 Calibrated 모드에서 실패했는가?
-
-로그의 마지막에 공통적으로 나타나는 에러는 다음과 같습니다.
-> `[ERROR] Degenerate covariance rank, Umeyama alignment is not possible`
-
-이 에러는 SLAM이 추정한 카메라의 궤적(Trajectory)이 3차원 공간상에 제대로 펼쳐지지 않고, **한 점에 머물러 있거나 일직선으로 붕괴(Collapse)되었을 때** 발생합니다. 즉, Tracking 최적화가 완전히 망가졌다는 뜻입니다.
-
-#### 🔍 원인 추적: `tracker.py` 코드 수정의 부작용
-제공해주신 `MASt3R-SLAM Sec 3.3 Discrepancy.md` 노트에서 논문의 수식과 코드의 불일치를 지적하셨고, 이에 따라 `tracker.py`를 직접 수정하신 것으로 보입니다.
-
-**수정 전 (원래 코드 - 주석 처리됨):**
-```python
-# sqrt_info_ray = 1 / self.cfg["sigma_ray"] * valid * torch.sqrt(Qk)
-```
-**수정 후 (현재 코드):**
-```python
-sqrt_info_ray = (1 / (self.cfg["sigma_ray"] ** 2)) * valid * Qk
-```
-
-**이 수정이 최적화를 망가뜨린 이유 (수학적 증명):**
-Gauss-Newton이나 Levenberg-Marquardt 최적화에서 우리가 최소화하려는 에러 $E$는 잔차(Residual) $r$의 제곱합입니다.
-$$ E = \frac{1}{2} \sum \mathbf{b}^T \mathbf{b} $$
-코드의 `solve` 함수를 보면 $\mathbf{b}$는 다음과 같이 정의됩니다.
-```python
-b = (robust_sqrt_info * r) # 즉, b = sqrt_info * r
-```
-따라서 실제 최적화되는 에러 함수는 다음과 같습니다.
-$$ E = \frac{1}{2} \sum (\text{sqrt\_info} \cdot r)^2 = \frac{1}{2} \sum (\text{sqrt\_info})^2 \cdot r^2 $$
-
-1.  **원래 코드의 경우:** $(\frac{\sqrt{Q}}{\sigma})^2 \cdot r^2 = \mathbf{\frac{Q}{\sigma^2} r^2}$
-    *   이것이 바로 **논문 저자들이 의도한 올바른 가중치(Weighted Least Squares)**입니다. (논문 수식 표기가 헷갈리게 되어 있었을 뿐, 원래 코드가 수학적으로 맞습니다.)
-2.  **작성자님이 수정한 코드의 경우:** $(\frac{Q}{\sigma^2})^2 \cdot r^2 = \mathbf{\frac{Q^2}{\sigma^4} r^2}$
-    *   $\sigma$는 보통 매우 작은 값입니다 (예: `sigma_ray = 0.003`).
-    *   $\sigma^4$는 $8.1 \times 10^{-11}$이라는 극단적으로 작은 값이 됩니다.
-    *   이로 인해 가중치가 **비정상적으로 폭발(Explode)**하게 됩니다.
-
-**결과적 현상:**
-가중치가 폭발하면서 Hessian 행렬 $H = A^T A$ 의 값들이 `float` 표현 범위를 넘어서거나 조건수(Condition Number)가 극도로 나빠집니다.
-이로 인해 로그에서 무수히 많이 보이는 **`Cholesky failed`** (행렬이 Positive Definite가 아님) 에러가 발생하고, 포즈 업데이트(`tau_ij_sim3`)가 0이 되거나 발산하여 카메라가 움직이지 않은 것으로 계산됩니다. 결국 궤적이 점 하나로 붕괴하여 `Umeyama alignment`가 불가능해진 것입니다.
-
----
-
-### 3. 기타 관찰 사항 (로그 분석)
-
-1.  **No-Calib 모드의 잦은 Relocalization (TUM 데이터셋)**
-    *   `tum_no_cal.txt`를 보면 `Cholesky failed`와 `RELOCALIZING against kf...` 메시지가 매우 자주 뜹니다.
-    *   TUM 데이터셋은 7-Scenes에 비해 카메라의 회전(Rotation)이 빠르고 모션 블러가 심합니다.
-    *   카메라 내부 파라미터(K) 없이 순수하게 MASt3R의 Pointmap 매칭에만 의존하다 보니, 기하학적 제약이 부족하여 Tracking을 자주 놓치는(Lost) 현상입니다. (그래도 Relocalization 모듈이 훌륭하게 작동하여 궤적을 끝까지 이어붙이는 데는 성공했습니다.)
-2.  **FPS (처리 속도) 차이**
+### 4.3 fps 
+**FPS (처리 속도) 차이**
     *   7-Scenes (No-Calib): ~2.8 FPS
     *   TUM (No-Calib): ~2.6 FPS
     *   ETH3D (Calib): ~4.5 FPS
-    *   논문에서는 RTX 4090 기준 15 FPS라고 했으나, 현재 환경에서는 2~4 FPS가 나오고 있습니다. 이는 CPU/GPU 스펙 차이이거나, `single_thread: True` 설정 때문일 수 있습니다.
+    *   논문에서는 RTX 4090 기준 15 FPS라고 했으나, 현재 환경(RTX 3060 12GB)에서는 2~4 FPS가 나오고 있습니다.
+제공해주신 초안에 **작성자님이 추가하신 통찰(Reason 3: Strong Filter 효과)**과 **불안정성(Instability)**에 대한 분석을 전문적인 용어로 다듬어 보강했습니다.
+
+특히 **5.2(정확도 향상)**와 **5.3(불안정성 증가)**이 서로 **Trade-off 관계**에 있다는 점을 강조하면 논리적으로 매우 탄탄한 보고서가 됩니다.
 
 ---
 
-### 4. 해결 방안 및 다음 단계 (Action Items)
+# 5. Analysis & Discussion
 
-**Step 1: `tracker.py` 코드 원복**
-수학적 오해로 인해 변경된 가중치 코드를 원래대로 되돌려야 합니다.
-`opt_pose_ray_dist_sim3`와 `opt_pose_calib_sim3` 함수 내의 `sqrt_info` 계산을 아래와 같이 수정하세요.
+### 5.1. Mathematical Discrepancy between Paper and Code
+논문의 수식 (1)은 최적화하고자 하는 **목적 함수(Cost Function, $E$)**를 정의한 것이며, 코드는 이를 풀기 위해 Solver(Levenberg-Marquardt 등)에 입력하는 **잔차 벡터(Residual Vector, $b$)**를 구현한 것이다.
+- **이론적 배경:** Least Squares Solver는 입력된 벡터 $b$에 대해 $E = \frac{1}{2}\|b\|^2$을 최소화한다. 따라서 가중치 $W$를 목적 함수에 적용하려면, 입력 벡터 $b$에는 $\sqrt{W}$를 곱해서 넣어주는 것이 수학적으로 올바른 구현(Whitening)이다.
+- **실험의 의의:** 본 실험에서 코드를 수정하여 가중치를 제곱한 행위는, 실제 최적화 과정에서 가중치를 의도된 $W$가 아닌 **$W^2$ (혹은 그 이상)으로 증폭**시켜 적용한 것과 동일한 효과를 낳았다.
 
-```python
-# opt_pose_ray_dist_sim3 내부
-sqrt_info_ray = 1 / self.cfg["sigma_ray"] * valid * torch.sqrt(Qk)
-sqrt_info_dist = 1 / self.cfg["sigma_dist"] * valid * torch.sqrt(Qk)
+### 5.2. Unexpected Robustness of Uncalibrated Mode
+가중치가 비정상적으로 폭발했음에도 불구하고, **Uncalibrated 모드**는 궤적 붕괴 없이 논문 수치와 비슷하거나 오히려 더 좋은 성능(정확도)을 보였다. 이에 대한 원인은 다음과 같이 분석된다.
+1.  **Bounded Ray Space:** Pixel Space와 달리 Ray Space의 잔차는 단위 구(Unit Sphere) 상의 거리이므로, 에러의 최댓값이 제한적(Bounded)이다. 따라서 가중치가 커져도 수치적 발산의 위험이 상대적으로 적다.
+2.  **Optimizer Damping:** Levenberg-Marquardt 알고리즘의 Damping Factor($\lambda$)가 에러 스케일이 커짐에 따라 자동으로 조절되며 최적화 과정의 발산을 억제했을 가능성이 있다.
+3.  **Aggressive Filtering Effect (Strong Filter):** **(작성자님 추가 내용 보강)** 가중치를 제곱하여 증폭시킨 것이 오히려 **"공격적인 아웃라이어 제거(Aggressive Outlier Rejection)"** 역할을 수행했다. 신뢰도($Q$)가 조금이라도 낮거나 에러가 있는 매칭점들은 가중치 격차로 인해 최적화 과정에서 영향력이 거의 0으로 수렴하게 되고, **극도로 신뢰도가 높은 소수의 Inlier들만 포즈 추정에 반영**되면서 오히려 평균 정확도(RMSE)가 향상되는 결과를 낳았다.
 
-# opt_pose_calib_sim3 내부
-sqrt_info_pixel = 1 / self.cfg["sigma_pixel"] * valid * torch.sqrt(Qk)
-sqrt_info_depth = 1 / self.cfg["sigma_depth"] * valid * torch.sqrt(Qk)
-```
-*(노트 `MASt3R-SLAM Sec 3.3 Discrepancy.md`의 결론을 "논문의 수식 표기가 틀렸고, 깃허브의 원래 코드가 맞다"로 수정하시는 것을 권장합니다.)*
-
-**Step 2: Calibrated 모드 재실험**
-코드를 원복한 후 `bash ./scripts/eval_7_scenes.sh` (calib 모드)를 다시 실행해 보세요. `Degenerate covariance rank` 에러가 사라지고 정상적인 RMSE 평가 결과가 출력될 것입니다.
-
-**Step 3: 속도(FPS) 최적화 (선택 사항)**
-현재 2~4 FPS로 실시간(15 FPS)에 미치지 못하고 있습니다.
-*   `config/base.yaml` 등에서 `single_thread: False`로 변경해 보세요. (백엔드 최적화와 프론트엔드 트래킹이 병렬로 돌아가 속도가 향상될 수 있습니다.)
-*   PyTorch의 `half()` (FP16) 연산이 제대로 GPU에서 돌고 있는지 확인이 필요합니다.
-
-
-
-
-제공해주신 로그 파일들과 MASt3R-SLAM 논문(arXiv:2412.12392)의 공식 벤치마크 수치를 대조하여, 요청하신 **3개 데이터셋 × 2개 모드에 대한 5개의 비교 표**를 정리해 드립니다. (단위는 모두 ATE RMSE, 미터(m) 기준입니다.)
+### 5.3. System Instability
+높은 정확도와는 별개로, 로그상에서 `Cholesky failed` 및 `RELOCALIZING` 메시지가 빈번하게 관측되었다. 이는 시스템의 불안정성(Instability)을 시사한다.
+- **원인:** 가중치 폭발로 인해 Hessian Matrix($H$)의 조건수(Condition Number)가 악화되면서 수치적 해를 구하지 못하는 경우가 잦아졌다.
+- **해석:** 5.2절의 'Strong Filter' 효과는 양날의 검이다. 신뢰도가 높은 구간에서는 정확도를 높여주지만, 매칭이 조금이라도 부족한 구간(빠른 회전 등)에서는 **유효한 특징점이 부족해져 트래킹 실패(Tracking Lost)**로 이어진다.
+- **결론:** 즉, 실험 결과는 **안정성(Stability)을 희생하여 정확도(Accuracy)를 얻은 상태**라고 해석할 수 있다.
 
 ---
 
----
+# 6. Conclusion & Future Work
 
-### 💡 종합 분석 요약
+### 6.1. Conclusion
+본 연구에서는 MASt3R-SLAM 논문의 수식과 코드 구현의 차이를 분석하고, 수식에 맞춰 코드를 변경했을 때의 시스템 거동을 실험적으로 검증하였다.
+1.  **구현의 타당성:** 코드는 Cost Function을 미분 가능한 Residual Vector 형태로 변환하여 구현한 것으로, `sqrt` 적용이 수학적으로 올바른 방법임을 확인하였다.
+2.  **Uncalibrated 모드의 강건성:** 가중치 스케일이 비정상적으로 커진 환경에서도 SOTA급 성능을 유지했다. 이는 Intrinsic 정보가 없는 상황에서도 MASt3R-SLAM의 Ray-based Optimization이 매우 강건하게 동작함을 시사한다.
+3.  **정확도와 안정성의 Trade-off:** 가중치 증폭 실험을 통해, 아웃라이어를 강하게 억제하면 정확도는 상승하지만 트래킹 유지력(안정성)은 저하되는 Trade-off 관계를 확인하였다.
 
-1. **Uncalibrated (Ray 공간 최적화)는 완벽합니다.**
-   * 작성자님이 수정한 `tracker.py`의 버그는 `opt_pose_calib_sim3` (픽셀 공간 최적화)와 `opt_pose_ray_dist_sim3` (레이 공간 최적화) 양쪽에 모두 영향을 주었어야 하지만, Uncalibrated 모드에서는 기적적으로(?) 최적화가 수렴하여 **논문과 동일하거나 더 나은 결과**를 보여주었습니다.
-2. **Calibrated (Pixel 공간 최적화)는 완전히 망가져 있습니다.**
-   * $K$ 행렬을 사용하는 순간, 잘못된 가중치 제곱(`sigma_pixel**2`, `sigma_depth**2`)이 잔차(Residual)와 결합하면서 Hessian 행렬이 폭발하고 있습니다.
-   * **해결책:** 이전 답변에서 안내해 드린 대로 `tracker.py`의 `sqrt_info` 계산식을 원래의 `1 / sigma * torch.sqrt(Qk)` 형태로 원복하시면 Table 2, 4, 5의 빨간색 실패(Failed)들이 모두 논문 수치 수준의 성공으로 바뀔 것입니다.
-
-
-
-
-
-네, 맞습니다! 올려주신 이미지들이 바로 제가 이전 답변에서 기준점(Ground Truth)으로 삼았던 **MASt3R-SLAM 논문의 공식 벤치마크 표와 그래프**들입니다. 
-
-제가 텍스트로 된 논문 데이터를 기반으로 표를 작성했었는데, 올려주신 캡처본들을 통해 수치들을 다시 한번 완벽하게 교차 검증(Cross-check)할 수 있었습니다.
-
-특히, 올려주신 **첫 번째 이미지(Table 1. TUM RGB-D)** 덕분에 제가 이전 답변에서 놓쳤던 부분을 하나 바로잡을 수 있게 되었습니다.
-
-### 💡 정정 및 업데이트 사항 (TUM RGB-D Uncalibrated)
-
-이전 답변에서 제가 "TUM 데이터셋의 Uncalibrated 결과는 세부 시퀀스 수치가 없고 평균(0.060)만 있다"고 말씀드렸는데, 올려주신 **Table 1의 하단(Uncalibrated - Ours*)**을 보니 세부 시퀀스 결과가 명확히 나와 있었습니다! 
-
-올려주신 표를 바탕으로 **TUM RGB-D (Uncalibrated)** 비교표를 다시 정확하게 업데이트해 드립니다.
-
-#### 📊 업데이트된 Table 3: TUM RGB-D 데이터셋 (Uncalibrated / `--no-calib`)
-*논문의 `Ours*` 수치와 현재 작성자님의 로그(`tum_no_cal.txt`) 수치 비교*
-
-| Sequence | 논문 결과 (Ours*) | 현재 실험 결과 | 비교 분석 |
-| :--- | :--- | :--- | :--- |
-| freiburg1_360 | 0.070 | **0.072** | 오차 범위 내 유사 |
-| freiburg1_desk | 0.035 | **0.039** | 오차 범위 내 유사 |
-| freiburg1_desk2 | 0.055 | **0.053** | 🟢 **소폭 개선** |
-| freiburg1_floor | 0.056 | **0.055** | 🟢 **소폭 개선** |
-| freiburg1_plant | 0.035 | **0.036** | 오차 범위 내 유사 |
-| freiburg1_room | 0.118 | **0.054** | 🔥 **압도적 개선 (절반 이하 에러)** |
-| freiburg1_rpy | 0.041 | **0.045** | 오차 범위 내 유사 |
-| freiburg1_teddy | 0.114 | **0.111** | 🟢 **소폭 개선** |
-| freiburg1_xyz | 0.020 | **0.020** | 🟢 **완벽 일치** |
-| **Average** | **0.060** | **0.054** | 🔥 **논문 공식 수치 능가** |
-
----
-
-### 🔍 올려주신 이미지들과 현재 상황 최종 요약
-
-1. **이미지 2 (Table 2. 7-Scenes)**
-   * `Ours*` (Uncalibrated): 논문 0.066 ↔ 현재 실험 0.066 **(완벽 일치)**
-   * `Ours` (Calibrated): 논문 0.047 ↔ 현재 실험 **(전면 실패 - 궤적 붕괴)**
-2. **이미지 1 (Table 1. TUM RGB-D)**
-   * `Ours*` (Uncalibrated): 논문 0.060 ↔ 현재 실험 0.054 **(논문보다 우수함)**
-   * `Ours` (Calibrated): 논문 0.030 ↔ 현재 실험 **(전면 실패 - 궤적 붕괴)**
-3. **이미지 4 (Figure 5. ETH3D-SLAM)**
-   * `Ours` (Calibrated): 논문 ATE 0.086 ↔ 현재 실험 **(전면 실패 - 궤적 붕괴)**
-
-**결론:**
-올려주신 논문의 공식 표들을 통해 확인해 본 결과, 현재 작성자님의 환경에서 **Uncalibrated 모드(`--no-calib`)는 논문 저자들과 완전히 동일하거나 오히려 더 나은 SOTA급 성능**을 내고 있음이 확실하게 증명되었습니다. 
-
-반면, Calibrated 모드는 앞서 분석해 드린 `tracker.py`의 가중치(`sqrt_info`) 제곱 버그로 인해 행렬이 폭발하여 실패하고 있는 것이 확실합니다. 해당 코드만 원래대로 복구하시면 올려주신 표의 `Ours` (Calibrated) 수치들도 완벽하게 재현하실 수 있을 것입니다!
+### 6.2. Future Work
+1.  **Code Correction:** `tracker.py`의 가중치 계산 로직(`sqrt_info` 누락 및 제곱 연산)을 깃허브 원본 상태로 복구하여 Calibrated 모드의 정상 동작을 확보한다.
+2.  **Full Benchmark Verification:** 코드를 수정한 후, 실패했던 ETH3D 및 7-Scenes (Calib) 데이터셋에 대한 벤치마크를 재수행하여 논문의 `Ours` 수치를 완벽히 재현하는지 검증한다.
+3.  **Optimization for Real-time:** 현재 2~4 FPS 수준인 처리 속도를 개선하기 위해 `single_thread` 옵션 해제, FP16 연산 점검 등 시스템 최적화 방안을 모색한다.
