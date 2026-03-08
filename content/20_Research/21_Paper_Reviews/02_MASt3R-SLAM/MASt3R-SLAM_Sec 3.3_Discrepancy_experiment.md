@@ -121,7 +121,18 @@ $$E = \frac{1}{2} \sum \left( \mathbf{\text{(sqrt\_info}^2)^2} \cdot w_{huber}(r
 
 ## 4.2 Result by dataset
 
-### 4.2.1 Uncalibrated
+### 4.2.1 Calibrated
+
+TUM RGB-D, 7-Scenes, ETH3D 의 Calibrated 모드에서는 모두 다음 에러를 출력하며 실패합니다. 
+
+```
+Cholesky failed 1
+fps: 3.~~
+...
+[ERROR] Degenerate covariance rank, Umeyama alignment is not possible
+```
+
+### 4.2.2 Uncalibrated
 
 #### Table 1: 7-Scenes Uncalibrated 
 
@@ -153,84 +164,66 @@ $$E = \frac{1}{2} \sum \left( \mathbf{\text{(sqrt\_info}^2)^2} \cdot w_{huber}(r
 | **Average**     | **0.060**     | **0.054**     | ==논문 수치 보다 좋음==       |
 놀랍게도 **현재 실험 결과의 평균이 논문보다 더 우수**하게 측정됨
 
-### 4.2.1 Calibrated
 
-> `[ERROR] Degenerate covariance rank, Umeyama alignment is not possible`
+#### logs 
+두 Uncalibrated 데이터셋에서 Cholesky failed 36, RELOCALIZING against kf 5 and \[4\] 같은 로그가 자주 발견된다 
+
+`@datasets/7-scenes/heads/`
+```
+Cholesky failed 36
+RELOCALIZING against kf  2  and  [1]
+Success! Relocalized
+FPS: 2.423780591751784
+Database retrieval 4 :  {2}
+FPS: 2.5008121949383124
+Cholesky failed 93
+RELOCALIZING against kf  5  and  [4]
+Success! Relocalized
+FPS: 2.5325265285669603
+Database retrieval 7 :  {5}
+FPS: 2.567269228670879
+Database retrieval 8 :  {6}
+FPS: 2.5867187171643824
+```
+7-Scenes Uncalibrated 에서는 빈도가 적다 
+heads시퀀스에서만 Cholesky failed 과 RELOCALIZING against 3번이 발생했다  
+
+`@datasets/7-scenes/heads/`
+```
+FPS: 3.0335814130612992
+FPS: 3.0589825739121532
+RELOCALIZING against kf  11  and  [2]
+Failed to relocalize
+FPS: 3.0785224992905866
+RELOCALIZING against kf  11  and  [7]
+Failed to relocalize
+RELOCALIZING against kf  11  and  [2]
+Failed to relocalize
+RELOCALIZING against kf  11  and  [2, 3]
+Failed to relocalize
+RELOCALIZING against kf  11  and  [2]
+Success! Relocalized
+...
+Cholesky failed 585
+RELOCALIZING against kf  18  and  [17, 10]
+Success! Relocalized
+Database retrieval 19 :  {9, 12, 7}
+Database retrieval 20 :  {8, 9, 7}
+FPS: 2.8300200637410757
+Database retrieval 21 :  {9, 19, 7}
+Database retrieval 22 :  {17, 10, 18}
+Cholesky failed 618
+RELOCALIZING against kf  23  and  [22]
+Success! Relocalized
+FPS: 2.794340382215157
+```
+TUM RGB-D Uncalibrated 에서는 빈도가 많다  
+전반적으로 Cholesky failed 는 31번 RELOCALIZING against 는 97번 그리고 Failed to relocalize는 66번 발생했다. 
 
 
----
-
-### 📊 Table 2: 7-Scenes 데이터셋 (Calibrated)
-카메라 파라미터($K$)를 사용하는 모드입니다. 앞서 분석한 `tracker.py`의 **가중치 폭발 버그**로 인해 최적화가 무너지며 전면 실패했습니다.
-
-| Sequence | 논문 결과 (Ours) | 현재 실험 결과 | 상태 |
-| :--- | :--- | :--- | :--- |
-| chess | 0.053 | Failed | ❌ 궤적 붕괴 (`Degenerate covariance`) |
-| fire | 0.025 | Failed | ❌ 궤적 붕괴 |
-| heads | 0.015 | Failed | ❌ 궤적 붕괴 |
-| office | 0.097 | Failed | ❌ 궤적 붕괴 |
-| pumpkin | 0.088 | Failed | ❌ 궤적 붕괴 |
-| redkitchen | 0.041 | Failed | ❌ 궤적 붕괴 |
-| stairs | 0.011 | Failed | ❌ 궤적 붕괴 |
-| **Average** | **0.047** | **Failed** | ❌ **실패** |
-
----
-
-### 📊 Table 3: TUM RGB-D 데이터셋 (Uncalibrated / `--no-calib`)
-논문 본문 표에는 Calibrated 결과만 있고, Uncalibrated 결과는 Ablation Study(Table 4)에 평균값(0.060m)으로만 리포트되어 있습니다. 놀랍게도 **현재 실험 결과의 평균이 논문보다 더 우수**하게 측정되었습니다.
-
-| Sequence | 논문 결과 (Ours*) | 현재 실험 결과 | 비교 분석 |
-| :--- | :--- | :--- | :--- |
-| freiburg1_360 | 0.070 | **0.072** | 오차 범위 내 유사 |
-| freiburg1_desk | 0.035 | **0.039** | 오차 범위 내 유사 |
-| freiburg1_desk2 | 0.055 | **0.053** | 🟢 **소폭 개선** |
-| freiburg1_floor | 0.056 | **0.055** | 🟢 **소폭 개선** |
-| freiburg1_plant | 0.035 | **0.036** | 오차 범위 내 유사 |
-| freiburg1_room | 0.118 | **0.054** | 🔥 **압도적 개선 (절반 이하 에러)** |
-| freiburg1_rpy | 0.041 | **0.045** | 오차 범위 내 유사 |
-| freiburg1_teddy | 0.114 | **0.111** | 🟢 **소폭 개선** |
-| freiburg1_xyz | 0.020 | **0.020** | 🟢 **완벽 일치** |
-| **Average** | **0.060** | **0.054** | 🔥 **논문 공식 수치 능가** |
-
----
-
-### 📊 Table 4: TUM RGB-D 데이터셋 (Calibrated)
-마찬가지로 픽셀 공간 최적화를 시도하다가 가중치 폭발로 인해 행렬 연산(`Cholesky failed`)이 실패하며 궤적이 붕괴되었습니다.
-
-| Sequence | 논문 결과 (Ours) | 현재 실험 결과 | 상태 |
-| :--- | :--- | :--- | :--- |
-| freiburg1_360 | 0.049 | Failed | ❌ 궤적 붕괴 |
-| freiburg1_desk | 0.016 | Failed | ❌ 궤적 붕괴 |
-| freiburg1_desk2 | 0.024 | Failed | ❌ 궤적 붕괴 |
-| freiburg1_floor | 0.025 | Failed | ❌ 궤적 붕괴 |
-| freiburg1_plant | 0.020 | Failed | ❌ 궤적 붕괴 |
-| freiburg1_room | 0.061 | Failed | ❌ 궤적 붕괴 |
-| freiburg1_rpy | 0.027 | Failed | ❌ 궤적 붕괴 |
-| freiburg1_teddy | 0.041 | Failed | ❌ 궤적 붕괴 |
-| freiburg1_xyz | 0.009 | Failed | ❌ 궤적 붕괴 |
-| **Average** | **0.030** | **Failed** | ❌ **실패** |
-
----
-
-### 📊 Table 5: ETH3D 데이터셋 (Calibrated)
-*※ ETH3D는 시퀀스가 50개 이상으로 매우 많아 그룹화하여 표기했습니다. (Uncalibrated 로그는 제공되지 않아 Calibrated만 작성합니다.)*
-
-논문에서는 ETH3D의 빠른 모션에서도 강건하게 트래킹이 유지됨을 증명했으나, 현재 코드에서는 Calibrated 모드의 치명적 버그로 인해 단 하나의 시퀀스도 통과하지 못했습니다.
-
-| Sequence Group | 논문 결과 (Ours) | 현재 실험 결과 | 상태 |
-| :--- | :--- | :--- | :--- |
-| plant_1 ~ 5 | 성공 (AUC 곡선 리포트) | Failed | ❌ 궤적 붕괴 |
-| cables_1 ~ 3 | 성공 | Failed | ❌ 궤적 붕괴 |
-| camera_shake_1 ~ 3 | 성공 | Failed | ❌ 궤적 붕괴 |
-| ceiling_1 ~ 2 | 성공 | Failed | ❌ 궤적 붕괴 |
-| desk_3, desk_changing_1 | 성공 | Failed | ❌ 궤적 붕괴 / Timestamp 에러 |
-| einstein_1 ~ 3 등 | 성공 | Failed | ❌ 궤적 붕괴 |
-| mannequin_1 ~ 7 등 | 성공 | Failed | ❌ 궤적 붕괴 |
-| sfm_bench, garden 등 | 성공 | Failed | ❌ 궤적 붕괴 |
-| sofa_1 ~ 4 등 | 성공 | Failed | ❌ 궤적 붕괴 / Timestamp 에러 |
-| table_3 ~ 7 등 | 성공 | Failed | ❌ 궤적 붕괴 |
-| **전체 평가** | **성공적 트래킹** | **All Failed** | ❌ **전면 실패** |
-
+|     |     |
+| --- | --- |
+|     |     |
 
 
 
