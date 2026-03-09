@@ -319,7 +319,7 @@ FPS: 2.950453171485702
 # 5. Analysis & Discussion
 
 ### 5.1. Mathematical Discrepancy between Paper and Code
-논문의 수식 (1)은 최적화하고자 하는 **목적 함수(Cost Function, $E$)**를 정의한 것이며, 코드는 이를 풀기 위해 Solver(Levenberg-Marquardt 등)에 입력하는 **잔차 벡터(Residual Vector, $b$)**를 구현한 것이다.
+논문의 수식 (1)은 최적화하고자 하는 목적 함수(Cost Function, $E$)를 정의한 것이며, 코드는 이를 풀기 위해 Solver(Levenberg-Marquardt 등)에 입력하는 잔차 벡터(Residual Vector, $b$)를 구현한 것이다.
 - **이론적 배경:** Least Squares Solver는 입력된 벡터 $b$에 대해 $E = \frac{1}{2}\|b\|^2$을 최소화한다. 따라서 가중치 $W$를 목적 함수에 적용하려면, 입력 벡터 $b$에는 $\sqrt{W}$를 곱해서 넣어주는 것이 수학적으로 올바른 구현(Whitening)이다.
 - **실험의 의의:** 본 실험에서 코드를 수정하여 가중치를 제곱한 행위는, 실제 최적화 과정에서 가중치를 의도된 $W$가 아닌 **$W^2$ (혹은 그 이상)으로 증폭**시켜 적용한 것과 동일한 효과를 낳았다.
 
@@ -331,7 +331,7 @@ FPS: 2.950453171485702
 
 ### 5.3. System Instability
 높은 정확도와는 별개로, 로그상에서 `Cholesky failed` 및 `RELOCALIZING` 메시지가 빈번하게 관측되었다. 이는 시스템의 불안정성(Instability)을 시사한다.
-- **원인:** 가중치 폭발로 인해 Hessian Matrix($H$)의 조건수(Condition Number)가 악화되면서 수치적 해를 구하지 못하는 경우가 잦아졌다.
+- **원인:** 가중치를 제곱하여 증폭시킨 결과, 최적화 과정에서 계산되는 **행렬의 값들이 너무 커지거나(Overflow), 반대로 너무 작아져서(Underflow) 컴퓨터가 정확한 계산을 수행할 수 없는 상태**가 되었다. 이로 인해 행렬을 푸는 과정(Cholesky decomposition)에서 수치적 오류가 발생하여 트래킹이 멈추는 현상이 잦아졌다
 - **해석:** 5.2절의 'Strong Filter' 효과는 양날의 검이다. 신뢰도가 높은 구간에서는 정확도를 높여주지만, 매칭이 조금이라도 부족한 구간(빠른 회전 등)에서는 유효한 특징점이 부족해져 트래킹 실패(Tracking Lost)로 이어진다.
 - **결론:** 즉, 실험 결과는 **안정성(Stability)을 희생하여 정확도(Accuracy)를 얻은 상태**라고 해석할 수 있다.
 
