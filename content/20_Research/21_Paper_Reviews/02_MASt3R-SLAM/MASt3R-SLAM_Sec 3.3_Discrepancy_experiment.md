@@ -21,7 +21,7 @@ $$E_r = \sum \left\|\frac{ \psi(\tilde{\mathbf{X}}_k) - \psi(\mathbf{T}_{kf} \ma
 - OS : Ubuntu (WSL2)
 - Memory tuning 
 	- swap memory: 8GB
-	- 위의 메모리 양의 한게로 인한 OOM 방지 
+	- 위의 메모리 양의 한계로 인한 OOM 방지 
 - Dataset: TUM RGB-D(9개 시퀀스), 7-Scenes(7개 시퀀스)
 	- TUM RGB-D, 7-Scenes 는 no-calib, calib 버전이 존제
 	- eth3d는 너무 시퀀스가 많아서 실험이 어렵다... 성능부족 
