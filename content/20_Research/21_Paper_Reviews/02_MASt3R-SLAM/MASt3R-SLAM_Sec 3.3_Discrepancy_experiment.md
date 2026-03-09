@@ -311,10 +311,10 @@ FPS: 2.950453171485702
 
 ### 4.3 fps 
 **FPS (처리 속도) 차이**
-    *   7-Scenes (No-Calib): ~2.8 FPS
-    *   TUM (No-Calib): ~2.6 FPS
-    *   ETH3D (Calib): ~4.5 FPS
-    *   논문에서는 RTX 4090 기준 15 FPS라고 했으나, 현재 환경(RTX 3060 12GB)에서는 2~4 FPS가 나오고 있습니다.
+- 7-Scenes (No-Calib): ~2.8 FPS
+- TUM (No-Calib): ~2.6 FPS
+- ETH3D (Calib): ~4.5 FPS
+- 논문에서는 RTX 4090 기준 15 FPS라고 했으나, 현재 환경(RTX 3060 12GB)에서는 2~4 FPS가 나오고 있습니다.
 
 # 5. Analysis & Discussion
 
