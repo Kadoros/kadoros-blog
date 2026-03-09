@@ -22,10 +22,9 @@ $$E_r = \sum \left\|\frac{ \psi(\tilde{\mathbf{X}}_k) - \psi(\mathbf{T}_{kf} \ma
 - Memory tuning 
 	- swap memory: 8GB
 	- 위의 메모리 양의 한게로 인한 OOM 방지 
-- Dataset: TUM RGB-D(9개 시퀀스), 7-Scenes(7개 시퀀스), eth3d(61개 시퀀스)
+- Dataset: TUM RGB-D(9개 시퀀스), 7-Scenes(7개 시퀀스)
 	- TUM RGB-D, 7-Scenes 는 no-calib, calib 버전이 존제
-	- eth3d는 calib 버전만 존제
-		- 6개의 시퀀스는 evel_eth3d.sh 상에서 주석 처리 되어 있음
+	- eth3d는 너무 시퀀스가 많아서 실험이 어렵다... 성능부족 
 	- euroc dataset은 다운이 안됨
 - Evaluation Metric: ATE RMSE (Absolute Trajectory Error)
 - codebase link: https://github.com/rmurai0610/MASt3R-SLAM
@@ -107,15 +106,41 @@ def opt_pose_calib_sim3(self, Xf, Xk, T_WCf, T_WCk, Qk, valid, meas_k, valid_mea
 
 $$E = \frac{1}{2} \sum \left( \mathbf{\text{(sqrt\_info}^2)^2} \cdot w_{huber}(r_{white}) \cdot r^2 \right)$$
 # 4. Experimental Results
+#### 4.0. Troubleshooting & Debugging 
+
+본 실험 과정에서 Calibrated 모드(Case A) 수행 시  다음 에러와 함께 프로그램이 아무것도 못하는경우를 발견하였다. 
+
+```
+Cholesky failed 1
+fps:3.~~~
+...
+[ERROR] Degenerate covariance rank, Umeyama alignment is not possible
+```
+이에 대한 원인 분석 및 해결 과정은 다음과 같다.
+
+1. **문제 발견:** 논문의 수식(2)를 코드에 적용하는 과정에서 가중치 계산 로직을 수정하였으나, Calibrated 모드에서 즉각적인 최적화 실패가 발생하였다.
+    
+2. **원인 분석:**
+    
+    - **코드적 요인:** opt_pose_calib_sim3 함수 내에서 가중치 변수(sqrt_info_pixel, sqrt_info_depth)를 계산한 후, 이를 병합하여 sqrt_info를 생성하는 torch.cat 코드를 실수로 삭제하였다.
+        
+    - **디버깅 혼선:** 이로 인해 발생한 NameError가 try-except 블록에 의해 Cholesky failed로 잘못 출력되어, 수학적 최적화 문제로 오인하게 되었다.
+        
+3. **해결:** 누락된 torch.cat 코드를 복구하여 sqrt_info 변수를 정상적으로 생성하도록 수정하였다.
+    
+4. **결과:** 코드 정상화 이후, Calibrated 모드에서 7-Scenes 및 TUM 데이터셋의 논문 수치를 소수점 셋째 자리까지 재현하였다.
 ## 4.1 Result Overview 
 
-| 데이터셋          | 모드 (Calib) | Tracking 상태       | 최종 평가 (APE / Umeyama)                 | 비고                                |
-| :------------ | :--------- | :---------------- | :------------------------------------ | :-------------------------------- |
-| **7-Scenes**  | `no-calib` | 정상 (FPS ~2.8)     | **성공** (RMSE 0.03m ~ 0.11m)           | 논문의 Plug-and-play 기능 정상 작동 확인     |
-| **7-Scenes**  | `calib`    | 불안정 (FPS ~2.0)    | **실패** (`Degenerate covariance rank`) | 궤적(Trajectory)이 한 점으로 수렴하거나 붕괴됨   |
-| **TUM RGB-D** | `no-calib` | 잦은 Relocalization | **성공** (RMSE 0.02m ~ 0.11m)           | 빠른 움직임으로 인해 Tracking 실패 잦음, 복구는 됨 |
-| **TUM RGB-D** | `calib`    | 불안정 (FPS ~3.9)    | **실패** (`Degenerate covariance rank`) | 궤적 붕괴                             |
-| **ETH3D**     | `calib`    | 불안정 (FPS ~4.5)    | **실패** (`Degenerate covariance rank`) | 궤적 붕괴                             |
+
+| 데이터셋          | 모드 (Calib) | Tracking 상태       | 최종 평가 (ATE RMSE)   | 비고                           |
+| :------------ | :--------- | :---------------- | :----------------- | :--------------------------- |
+| **7-Scenes**  | `no-calib` | 정상 (FPS ~2.8)     | **성공** (평균 0.066m) |                              |
+| **7-Scenes**  | `calib`    | 정상 (FPS ~3.2)     | **성공** (평균 0.047m) |                              |
+| **TUM RGB-D** | `no-calib` | 잦은 Relocalization | **성공** (평균 0.054m) | 빠른 모션에 취약하나, 논문(0.060m)보다 우수 |
+| **TUM RGB-D** | `calib`    | 정상 (FPS ~4.7)     | **성공** (평균 0.030m) |                              |
+
+
+
 - Uncalibrated 모드는 정상적으로 작동하며, 7-Scenes와 TUM 데이터셋에서 준수한 RMSE(수 cm ~ 10cm 내외)를 보여주었다.
 - Calibrated 모드에서 모든 데이터셋의 최종 평가가 실패했다
 
@@ -123,32 +148,68 @@ $$E = \frac{1}{2} \sum \left( \mathbf{\text{(sqrt\_info}^2)^2} \cdot w_{huber}(r
 
 ### 4.2.1 Calibrated
 
-TUM RGB-D, 7-Scenes, ETH3D 의 Calibrated 모드에서는 모두 다음 에러를 출력하며 실패합니다. 
+#### Table 1: 7-Scenes Calibrated 
 
-```
-Cholesky failed 1
-fps: 3.~~
-...
-[ERROR] Degenerate covariance rank, Umeyama alignment is not possible
-```
+| Sequence    | 논문 (Ours) | 실험 결과              |     |
+| :---------- | :-------- | :----------------- | :-- |
+| chess       | 0.053     | **0.053** (0.0528) |     |
+| fire        | 0.025     | **0.025** (0.0252) |     |
+| heads       | 0.015     | **0.015** (0.0149) |     |
+| office      | 0.097     | **0.097** (0.0969) |     |
+| pumpkin     | 0.088     | **0.088** (0.0875) |     |
+| redkitchen  | 0.041     | **0.041** (0.0413) |     |
+| stairs      | 0.011     | **0.011** (0.0107) |     |
+| **Average** | **0.047** | **0.047**          | 일치  |
+실험 결과가 논문의 수치와 일치
+#### Table 2: TUM RGB-D Calibrated 
 
+| Sequence    | 논문 (Ours) | **지금 실험 결과**       |     |
+| :---------- | :-------- | :----------------- | :-- |
+| 360         | 0.049     | **0.049** (0.0487) |     |
+| desk        | 0.016     | **0.016** (0.0161) |     |
+| desk2       | 0.024     | **0.023** (0.0231) |     |
+| floor       | 0.025     | **0.025** (0.0249) |     |
+| plant       | 0.020     | **0.020** (0.0195) |     |
+| room        | 0.061     | **0.061** (0.0613) |     |
+| rpy         | 0.027     | **0.027** (0.0265) |     |
+| teddy       | 0.041     | **0.041** (0.0406) |     |
+| xyz         | 0.009     | **0.009** (0.0089) |     |
+| **Average** | **0.030** | **0.030**          | 일치  |
+실험 결과가 논문의 수치와 일치
+
+#### logs 
+두 Uncalibrated 데이터셋에서는 에러 코드가 거의 보이지 않음 
+Cholesky failed 36 는 0번 RELOCALIZING against 같은 코드도 총 3번 뿐이다. 
+`@datasets/tum/rgbd_dataset_freiburg1_teddy/`
+```
+FPS: 3.2166720459792777
+Skipped frame 542
+RELOCALIZING against kf  27  and  [25]
+Failed to relocalize
+RELOCALIZING against kf  27  and  [25, 26, 0]
+Failed to relocalize
+RELOCALIZING against kf  27  and  [25, 26]
+Success! Relocalized
+Database retrieval 28 :  {24, 25, 26}
+FPS: 3.1735249762537494
+```
 ### 4.2.2 Uncalibrated
 
-#### Table 1: 7-Scenes Uncalibrated 
+#### Table 4: 7-Scenes Uncalibrated 
 
-| Sequence    | 논문 결과 (Ours*) | 현재 실험 결과  | 상태  |
+| Sequence    | 논문 결과 (Ours*) | 현재 실험 결과  |     |
 | :---------- | :------------ | :-------- | :-- |
-| chess       | 0.063         | **0.062** | 성공  |
-| fire        | 0.046         | **0.047** | 성공  |
-| heads       | 0.029         | **0.033** | 성공  |
-| office      | 0.103         | **0.103** | 성공  |
-| pumpkin     | 0.114         | **0.112** | 성공  |
-| redkitchen  | 0.074         | **0.075** | 성공  |
-| stairs      | 0.032         | **0.032** | 성공  |
+| chess       | 0.063         | **0.062** |     |
+| fire        | 0.046         | **0.047** |     |
+| heads       | 0.029         | **0.033** |     |
+| office      | 0.103         | **0.103** |     |
+| pumpkin     | 0.114         | **0.112** |     |
+| redkitchen  | 0.074         | **0.075** |     |
+| stairs      | 0.032         | **0.032** |     |
 | **Average** | **0.066**     | **0.066** | 일치  |
 실험 결과가 논문의 수치와 일치
 
-#### Table 2: TUM RGB-D Uncalibrated 
+#### Table 5: TUM RGB-D Uncalibrated 
 
 | Sequence        | 논문 결과 (Ours*) | 현재 실험 결과  | 비교 분석                 |
 | :-------------- | :------------ | :-------- | :-------------------- |
@@ -162,7 +223,7 @@ fps: 3.~~
 | freiburg1_teddy | 0.114         | **0.111** | ==소폭 개선==             |
 | freiburg1_xyz   | 0.020         | **0.020** | 완벽 일치                 |
 | **Average**     | **0.060**     | **0.054** | ==논문 수치 보다 좋음==       |
-|                 |               |           |                       |
+
 실험 결과의 평균이 논문보다 더 우수하게 측정됨
 
 
@@ -189,7 +250,7 @@ FPS: 2.5867187171643824
 7-Scenes Uncalibrated 에서는 빈도가 적다 
 heads시퀀스에서만 Cholesky failed 과 RELOCALIZING against 3번이 발생했다  
 
-`@datasets/7-scenes/heads/`
+`@datasets/tum/rgbd_dataset_freiburg1_room/`
 ```
 FPS: 3.0335814130612992
 FPS: 3.0589825739121532
@@ -221,11 +282,31 @@ FPS: 2.794340382215157
 TUM RGB-D Uncalibrated 에서는 빈도가 많다  
 전반적으로 Cholesky failed 는 31번 RELOCALIZING against 는 97번 그리고 Failed to relocalize는 66번 발생했다. 
 
+이것을 unmodified code의 `@datasets/tum/rgbd_dataset_freiburg1_room/`를 확인해보면 Cholesky failed, RELOCALIZING against , 그리고 Failed to relocalize 모두 나타 나지 않은것을 확인 할 수 있다.
+`@datasets/tum/rgbd_dataset_freiburg1_room/`
+```
+Database retrieval 3 :  {1}
+Database retrieval 4 :  {0, 1}
+Database retrieval 5 :  {0}
+FPS: 2.7127460004933988
+FPS: 2.8720973061107724
+Database retrieval 9 :  {7}
+FPS: 2.8966108495236855
+FPS: 2.950453171485702
+...
+```
+
+
+| 모드 (TUM Room) | Cholesky Failed | Relocalization | Failed to Reloc |
+| :--- | :---: | :---: | :---: |
+| **Unmodified (원본)** | 0 | 0 | 0 |
+| **Modified (수정본)** | 31 | 97 | 66 |
+수정된 코드는 원본 대비 트래킹 안정성이 현저히 떨어짐을 확인함
 #### Pointmap
 
 | ![[../../../MASt3R-SLAM_Sec 3.3_Discrepancy_experiment_ply_normal.png]] | ![[../../../MASt3R-SLAM_Sec 3.3_Discrepancy_experiment_ply_modified.png]] |
 | ----------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| 기본                                                                      | code modifed version                                                      |
+| normal                                                                  | code modifed version                                                      |
 보이는 봐와 같이 포인트 맵은 동일 하다 
 
 ### 4.3 fps 
@@ -234,11 +315,6 @@ TUM RGB-D Uncalibrated 에서는 빈도가 많다
     *   TUM (No-Calib): ~2.6 FPS
     *   ETH3D (Calib): ~4.5 FPS
     *   논문에서는 RTX 4090 기준 15 FPS라고 했으나, 현재 환경(RTX 3060 12GB)에서는 2~4 FPS가 나오고 있습니다.
-제공해주신 초안에 **작성자님이 추가하신 통찰(Reason 3: Strong Filter 효과)**과 **불안정성(Instability)**에 대한 분석을 전문적인 용어로 다듬어 보강했습니다.
-
-특히 **5.2(정확도 향상)**와 **5.3(불안정성 증가)**이 서로 **Trade-off 관계**에 있다는 점을 강조하면 논리적으로 매우 탄탄한 보고서가 됩니다.
-
----
 
 # 5. Analysis & Discussion
 
@@ -256,20 +332,18 @@ TUM RGB-D Uncalibrated 에서는 빈도가 많다
 ### 5.3. System Instability
 높은 정확도와는 별개로, 로그상에서 `Cholesky failed` 및 `RELOCALIZING` 메시지가 빈번하게 관측되었다. 이는 시스템의 불안정성(Instability)을 시사한다.
 - **원인:** 가중치 폭발로 인해 Hessian Matrix($H$)의 조건수(Condition Number)가 악화되면서 수치적 해를 구하지 못하는 경우가 잦아졌다.
-- **해석:** 5.2절의 'Strong Filter' 효과는 양날의 검이다. 신뢰도가 높은 구간에서는 정확도를 높여주지만, 매칭이 조금이라도 부족한 구간(빠른 회전 등)에서는 **유효한 특징점이 부족해져 트래킹 실패(Tracking Lost)**로 이어진다.
+- **해석:** 5.2절의 'Strong Filter' 효과는 양날의 검이다. 신뢰도가 높은 구간에서는 정확도를 높여주지만, 매칭이 조금이라도 부족한 구간(빠른 회전 등)에서는 유효한 특징점이 부족해져 트래킹 실패(Tracking Lost)로 이어진다.
 - **결론:** 즉, 실험 결과는 **안정성(Stability)을 희생하여 정확도(Accuracy)를 얻은 상태**라고 해석할 수 있다.
 
----
 
 # 6. Conclusion & Future Work
 
 ### 6.1. Conclusion
 본 연구에서는 MASt3R-SLAM 논문의 수식과 코드 구현의 차이를 분석하고, 수식에 맞춰 코드를 변경했을 때의 시스템 거동을 실험적으로 검증하였다.
-1.  **구현의 타당성:** 코드는 Cost Function을 미분 가능한 Residual Vector 형태로 변환하여 구현한 것으로, `sqrt` 적용이 수학적으로 올바른 방법임을 확인하였다.
+1.  **구현의 타당성:** 코드는 Cost Function을 미분 가능한 Residual Vector 형태로 변환하여 구현한 것으로, `sqrt` 적용이 수학적으로 올바른 방법임을 확인하였다. 논문의 수식은 개념적인 에러 정의(Cost Function)를, 코드는 수치 최적화를 위한 구현(Residual Vector)을 나타내며, 두개 사이의 수학적 연결 고리를 확인하였다. typo 가 아니라 개념적 설명을 위한 것이 아닐까 추측한다. 
 2.  **Uncalibrated 모드의 강건성:** 가중치 스케일이 비정상적으로 커진 환경에서도 SOTA급 성능을 유지했다. 이는 Intrinsic 정보가 없는 상황에서도 MASt3R-SLAM의 Ray-based Optimization이 매우 강건하게 동작함을 시사한다.
-3.  **정확도와 안정성의 Trade-off:** 가중치 증폭 실험을 통해, 아웃라이어를 강하게 억제하면 정확도는 상승하지만 트래킹 유지력(안정성)은 저하되는 Trade-off 관계를 확인하였다.
+3.  **정확도와 안정성의 Trade-off:** 가중치 증폭 실험을 통해, 아웃라이어를 강하게 억제하면 정확도는 상승하지만 트래킹 유지력(안정성)은 저하되는 Trade-off 관계를 확인하였다. 특히, 동일한 데이터셋(`freiburg1_room`)에서 원본 코드(Unmodified)는 `Cholesky failed`나 `Relocalization` 없이 안정적으로 트래킹을 수행하는 반면, 수정된 코드에서는 빈번한 실패가 관측되었다. 이는 에러에 대한 신뢰도의 가중치 증폭를 제곱이 되기에 최적화의 수렴 영역을 좁혀, 카메라의 급격한 움직임에 대응하는 능력을 저하시켰다고 추측한다 (수학적인 증명은 하지 못한다.)
 
 ### 6.2. Future Work
-1.  **Code Correction:** `tracker.py`의 가중치 계산 로직(`sqrt_info` 누락 및 제곱 연산)을 깃허브 원본 상태로 복구하여 Calibrated 모드의 정상 동작을 확보한다.
-2.  **Full Benchmark Verification:** 코드를 수정한 후, 실패했던 ETH3D 및 7-Scenes (Calib) 데이터셋에 대한 벤치마크를 재수행하여 논문의 `Ours` 수치를 완벽히 재현하는지 검증한다.
-3.  **Optimization for Real-time:** 현재 2~4 FPS 수준인 처리 속도를 개선하기 위해 `single_thread` 옵션 해제, FP16 연산 점검 등 시스템 최적화 방안을 모색한다.
+1.  Full Benchmark Verification:  성능 문제로 진행 하지 못한  ETH3D 및 다운되지 않은 EuRoC 데이터셋에 대한 벤치마크를 재수행하여 논문의 `Ours` 수치를 완벽히 재현하는지 검증한다.
+
