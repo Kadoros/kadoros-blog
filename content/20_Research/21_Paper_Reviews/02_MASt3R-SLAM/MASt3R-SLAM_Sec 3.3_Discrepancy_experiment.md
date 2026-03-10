@@ -304,7 +304,7 @@ FPS: 2.950453171485702
 수정된 코드는 원본 대비 트래킹 안정성이 현저히 떨어짐을 확인함
 #### Pointmap
 
-| ![[../../../MASt3R-SLAM_Sec 3.3_Discrepancy_experiment_ply_normal.png]] | ![[../../../MASt3R-SLAM_Sec 3.3_Discrepancy_experiment_ply_modified.png]] |
+| ![[../../../90_Resources/92_Images/MASt3R-SLAM_Sec 3.3_Discrepancy_experiment_ply_normal.png]] | ![[../../../90_Resources/92_Images/MASt3R-SLAM_Sec 3.3_Discrepancy_experiment_ply_modified.png]] |
 | ----------------------------------------------------------------------- | ------------------------------------------------------------------------- |
 | normal                                                                  | code modifed version                                                      |
 보이는 봐와 같이 포인트 맵은 동일 하다 
