@@ -90,4 +90,9 @@ $$\mu_{GS, next} = \mu_{GS, now} - \eta \frac{\partial \mathcal{L}_{total}}{\par
 1. 나의 논문은 $$\mathcal{L}_{pde} = \|\hat{\mu}\nabla^{2}\hat{u} + (\nabla\hat{u} + \nabla\hat{u}^{T})\nabla\hat{\mu} + \rho\omega^{2}\hat{u}\|^{2}$$에서 $\hat{u}$ ->  $\hat{\mu}$ 이다 그런디 $\hat{u}$ 를 어디서 가져 올것이며  나며지 변수들은? 어서 가져오니? 
 2. endoslam의 베이스라인은 뭐임? 
 3. endo 쪽에 physics-constrained를 가진 논문 있음? 있어? 그럼 pino 넣어 없어 일단 physics-constrained 해보고
+	1. Endo 쪽에 Physics-constrained 논문 있어? yes
+		1.  **PhysiXDeform** (IEEE, 2023 등): 내시경 비디오에서 연조직 변형을 예측할 때 물리적 사전 지식(속도, 방향성 변형률 등)을 그래프 네트워크에 제약 조건으로 넣은 연구.
+			1. 이건 단순한 희소 메쉬 추적 모델입니다. 저희는 이 물리 제약의 개념을 **3D Gaussian Splatting 기반의 렌더링 SLAM**에 직접 결합하는 최초의 시도
+		2. **Predicting 3D soft tissue dynamics from 2D imaging using physics informed neural networks**: 2D 내시경 이미지에서 3D 조직 움직임을 재구성할 때, 연속체 모델(Continuum model)을 딥러닝(RNN)에 물리 제약으로 넣은 연구. 
+			1. NVIDIA A100 GPU에서 학습하는 데 약 7시간이 걸렸습니다
 4. 그리고 pinn 안다 생각하고 아니면 deeponet ,FNO 중 deeponet이거 중심으로 pino는 physics-informed neunal opeartor for learning partial differnetial equation 이거 읽어보삼 
