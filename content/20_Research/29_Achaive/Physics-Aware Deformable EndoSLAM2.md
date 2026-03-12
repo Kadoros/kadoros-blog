@@ -89,10 +89,43 @@ $$\mu_{GS, next} = \mu_{GS, now} - \eta \frac{\partial \mathcal{L}_{total}}{\par
 
 1. 나의 논문은 $$\mathcal{L}_{pde} = \|\hat{\mu}\nabla^{2}\hat{u} + (\nabla\hat{u} + \nabla\hat{u}^{T})\nabla\hat{\mu} + \rho\omega^{2}\hat{u}\|^{2}$$에서 $\hat{u}$ ->  $\hat{\mu}$ 이다 그런디 $\hat{u}$ 를 어디서 가져 올것이며  나며지 변수들은? 어서 가져오니? 
 2. endoslam의 베이스라인은 뭐임? 
-3. endo 쪽에 physics-constrained를 가진 논문 있음? 있어? 그럼 pino 넣어 없어 일단 physics-constrained 해보고
+3. 현재(2026년 초) 기준으로 정리해 드릴게요.
+
+### 1. 학계의 "근본" (Prestige): **Endo-4DGS**
+
+- **이유:** 의료 AI 분야에서 가장 권위 있는 **MICCAI 2024**에서 발표되었습니다.
+    
+- **특징:** 3DGS를 의료용(내시경)으로 끌어올린 '개척자' 역할을 했습니다. 시간축을 넣어서 장기의 움직임을 표현한 4D Gaussian 개념을 정립했기 때문에, 이후 나오는 논문들이 대부분 이 모델을 레퍼런스로 삼습니다.
+    
+- **한계:** 초기 모델이다 보니 연산량이 좀 있고, 아주 복잡한 비정형 변형(Deformation)에서는 조금 튀는 현상이 있습니다.
+    
+
+### 2. 기술적 "끝판왕" (Technical SOTA): **NRGS-SLAM**
+
+- **이유:** 2026년 2월에 나온 아주 최신 연구로, 내시경 SLAM의 최대 난제인 **'비정형 변형(Non-rigid)'**을 가장 깔끔하게 풀었습니다.
+    
+- **특징:** * 카메라가 움직이는 건지, 장기가 꿈틀대는 건지(Deformation)를 명확하게 분리해서 계산합니다.
+    
+    - 현님이 지금 CVML 연구실에서 고민하시는 **루프 클로저(Loop Closure)**나 **서브매핑(Sub-mapping)** 개념이 내시경 환경에 맞게 가장 고도화되어 녹아있습니다.
+        
+    - 실제 수술 영상(In-vivo) 데이터에서 가장 안정적인 복원력을 보여줍니다.
+        
+
+---
+
+### 한눈에 비교 (짱 결정전)
+
+| **구분**      | **Endo-4DGS**     | **NRGS-SLAM**                    |
+| ----------- | ----------------- | -------------------------------- |
+| **포지션**     | 의료 3DGS의 조상님 (근본) | 현시점 성능 대장 (SOTA)                 |
+| **강점**      | 4D 가우시안 프레임워크 정립  | 비정형 변형(Non-rigid) 대응력 최상         |
+| **주요 학회**   | MICCAI 2024       | 2026 최신 연구 (Arxiv/Top-tier 진행 중) |
+| **현님에게 추천** | 논문 흐름 파악용으로 먼저 읽기 | **연구실 프로젝트 구현 시 벤치마킹 1순위**       |
+1. endo 쪽에 physics-constrained를 가진 논문 있음? 있어? 그럼 pino 넣어 없어 일단 physics-constrained 해보고
 	1. Endo 쪽에 Physics-constrained 논문 있어? yes
-		1.  **PhysiXDeform** (IEEE, 2023 등): 내시경 비디오에서 연조직 변형을 예측할 때 물리적 사전 지식(속도, 방향성 변형률 등)을 그래프 네트워크에 제약 조건으로 넣은 연구.
+		1. 하지만 모두 '조직의 변형'을 예측하는 물리 모델링 논문이지 slam 논문이 아님
+		2.  **PhysiXDeform** (IEEE, 2023 등): 내시경 비디오에서 연조직 변형을 예측할 때 물리적 사전 지식(속도, 방향성 변형률 등)을 그래프 네트워크에 제약 조건으로 넣은 연구.
 			1. 이건 단순한 희소 메쉬 추적 모델입니다. 저희는 이 물리 제약의 개념을 **3D Gaussian Splatting 기반의 렌더링 SLAM**에 직접 결합하는 최초의 시도
-		2. **Predicting 3D soft tissue dynamics from 2D imaging using physics informed neural networks**: 2D 내시경 이미지에서 3D 조직 움직임을 재구성할 때, 연속체 모델(Continuum model)을 딥러닝(RNN)에 물리 제약으로 넣은 연구. 
+		3. **Predicting 3D soft tissue dynamics from 2D imaging using physics informed neural networks**: 2D 내시경 이미지에서 3D 조직 움직임을 재구성할 때, 연속체 모델(Continuum model)을 딥러닝(RNN)에 물리 제약으로 넣은 연구. 
 			1. NVIDIA A100 GPU에서 학습하는 데 약 7시간이 걸렸습니다
-4. 그리고 pinn 안다 생각하고 아니면 deeponet ,FNO 중 deeponet이거 중심으로 pino는 physics-informed neunal opeartor for learning partial differnetial equation 이거 읽어보삼 
+2. 그리고 pinn 안다 생각하고 아니면 deeponet ,FNO 중 deeponet이거 중심으로 pino는 physics-informed neunal opeartor for learning partial differnetial equation 이거 읽어보삼 
